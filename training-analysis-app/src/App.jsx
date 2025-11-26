@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Activity, Database, RefreshCw } from 'lucide-react';
+import { Activity, Database, RefreshCw, Filter, TrendingUp } from 'lucide-react';
 import CSVUpload from './components/CSVUpload';
 import CourseSelector from './components/CourseSelector';
 import StatsDashboard from './components/StatsDashboard';
@@ -30,6 +30,7 @@ function App() {
   const [rawData, setRawData] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [cacheInfo, setCacheInfo] = useState(null);
+  const [excludeAlreadyProficient, setExcludeAlreadyProficient] = useState(false);
 
   // Load cached data on mount
   useEffect(() => {
@@ -42,7 +43,7 @@ function App() {
     }
   }, []);
 
-  // Process data when rawData or selectedCourse changes
+  // Process data when rawData, selectedCourse, or filter changes
   const processedData = useMemo(() => {
     if (!rawData) return null;
 
@@ -71,7 +72,20 @@ function App() {
       preAssessments,
       postAssessments
     );
-    const analysisData = calculateLearningGains(matches);
+    let analysisData = calculateLearningGains(matches);
+
+    // Store full dataset for comparison
+    const allParticipantsData = analysisData;
+    const allParticipantsStats = calculateStatistics(allParticipantsData);
+
+    // Filter out already proficient if requested
+    let excludedCount = 0;
+    if (excludeAlreadyProficient) {
+      const filtered = analysisData.filter(d => d.preRate < 100);
+      excludedCount = analysisData.length - filtered.length;
+      analysisData = filtered;
+    }
+
     const stats = calculateStatistics(analysisData);
 
     return {
@@ -81,8 +95,11 @@ function App() {
       stats,
       unmatchedPre,
       unmatchedPost,
+      allParticipantsData,
+      allParticipantsStats,
+      excludedCount,
     };
-  }, [rawData, selectedCourse]);
+  }, [rawData, selectedCourse, excludeAlreadyProficient]);
 
   const handleDataLoaded = (data) => {
     setRawData(data);
@@ -184,6 +201,74 @@ function App() {
                 <div className="text-gray-600">
                   <span className="font-semibold text-gray-900">{selectedCourse}</span>
                 </div>
+              </div>
+
+              {/* Filter Toggle */}
+              <div className="card bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Filter className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">
+                        Focus on Learning Group
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Exclude participants who scored 100% on the pre-test (already proficient).
+                        This shows the true training impact on those who needed to learn.
+                      </p>
+                      {processedData.excludedCount > 0 && (
+                        <div className="flex items-center gap-2 mt-2 text-sm">
+                          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded font-medium">
+                            {processedData.excludedCount} already proficient excluded
+                          </span>
+                          <span className="text-gray-600">
+                            • Analyzing {processedData.analysisData.length} participants who had room to grow
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setExcludeAlreadyProficient(!excludeAlreadyProficient)}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                      excludeAlreadyProficient ? 'bg-purple-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                        excludeAlreadyProficient ? 'translate-x-7' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Comparison Stats */}
+                {excludeAlreadyProficient && processedData.allParticipantsStats && processedData.excludedCount > 0 && (
+                  <div className="mt-4 pt-4 border-t border-purple-200">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">All Participants</div>
+                        <div className="text-2xl font-bold text-gray-400">
+                          +{(processedData.allParticipantsStats.averagePostScore - processedData.allParticipantsStats.averagePreScore).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-gray-500">average gain</div>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <TrendingUp className="w-8 h-8 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Learning Group</div>
+                        <div className="text-2xl font-bold text-purple-700">
+                          +{(processedData.stats.averagePostScore - processedData.stats.averagePreScore).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-purple-600 font-medium">average gain</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Statistics Dashboard */}
