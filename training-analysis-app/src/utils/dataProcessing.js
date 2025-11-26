@@ -319,3 +319,55 @@ export function getLearningGainDistribution(learningGains) {
 
   return bins;
 }
+
+/**
+ * Get mastery level based on percentage score
+ */
+export function getMasteryLevel(percentage) {
+  if (percentage >= 90) return { level: 'Advanced', color: 'purple', icon: '🌟' };
+  if (percentage >= 80) return { level: 'Proficient', color: 'green', icon: '✓' };
+  if (percentage >= 70) return { level: 'Developing', color: 'blue', icon: '↗' };
+  if (percentage >= 60) return { level: 'Emerging', color: 'yellow', icon: '→' };
+  return { level: 'Needs Support', color: 'red', icon: '!' };
+}
+
+/**
+ * Get mastery progression description
+ */
+export function getMasteryProgression(preRate, postRate) {
+  const pre = getMasteryLevel(preRate);
+  const post = getMasteryLevel(postRate);
+
+  if (pre.level === post.level) {
+    return { type: 'maintained', message: `Maintained ${post.level}` };
+  }
+
+  const levels = ['Needs Support', 'Emerging', 'Developing', 'Proficient', 'Advanced'];
+  const preIndex = levels.indexOf(pre.level);
+  const postIndex = levels.indexOf(post.level);
+
+  if (postIndex > preIndex) {
+    const jump = postIndex - preIndex;
+    return {
+      type: 'improved',
+      message: `${pre.level} → ${post.level}`,
+      jump: jump
+    };
+  }
+
+  return {
+    type: 'declined',
+    message: `${pre.level} → ${post.level}`
+  };
+}
+
+/**
+ * Format score for display (emphasize percentage over raw score)
+ */
+export function formatScore(score, fullScore, rate) {
+  return {
+    primary: `${Math.round(rate)}%`,
+    secondary: `(${score}/${fullScore})`,
+    percentage: rate
+  };
+}

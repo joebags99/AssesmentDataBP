@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Search, Download, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { exportToCSV } from '../utils/dataProcessing';
+import { ChevronDown, ChevronUp, Search, Download, TrendingUp, TrendingDown, Minus, Award } from 'lucide-react';
+import { exportToCSV, getMasteryLevel, getMasteryProgression } from '../utils/dataProcessing';
 
 export default function ResultsTable({ analysisData, courseName }) {
   const [sortConfig, setSortConfig] = useState({ key: 'learningGain', direction: 'desc' });
@@ -190,7 +190,7 @@ export default function ResultsTable({ analysisData, courseName }) {
                 onClick={() => handleSort('percentageImprovement')}
               >
                 <div className="flex items-center justify-end gap-2">
-                  Improvement %
+                  Mastery Progression
                   <SortIcon columnKey="percentageImprovement" />
                 </div>
               </th>
@@ -212,47 +212,61 @@ export default function ResultsTable({ analysisData, courseName }) {
                   <div className="text-sm text-gray-500">{row.email}</div>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="font-medium text-gray-900">
-                    {row.preScore}/{row.fullScore}
+                  <div className="text-xl font-bold text-gray-900">
+                    {Math.round(row.preRate)}%
                   </div>
-                  <div className="text-sm text-gray-500">{row.preRate.toFixed(1)}%</div>
+                  <div className="text-xs text-gray-500">{row.preScore}/{row.fullScore} correct</div>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="font-medium text-gray-900">
-                    {row.postScore}/{row.fullScore}
+                  <div className="text-xl font-bold text-gray-900">
+                    {Math.round(row.postRate)}%
                   </div>
-                  <div className="text-sm text-gray-500">{row.postRate.toFixed(1)}%</div>
+                  <div className="text-xs text-gray-500">{row.postScore}/{row.fullScore} correct</div>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     {getChangeIcon(row.learningGain)}
-                    <span className={`font-semibold ${
-                      row.learningGain > 0
-                        ? 'text-green-700'
-                        : row.learningGain < 0
-                        ? 'text-red-700'
-                        : 'text-gray-600'
-                    }`}>
-                      {row.learningGain > 0 ? '+' : ''}{row.learningGain.toFixed(1)} pts
-                    </span>
+                    <div>
+                      <div className={`text-lg font-bold ${
+                        row.learningGain > 0
+                          ? 'text-green-700'
+                          : row.learningGain < 0
+                          ? 'text-red-700'
+                          : 'text-gray-600'
+                      }`}>
+                        {row.learningGain > 0 ? '+' : ''}{((row.postRate - row.preRate)).toFixed(0)}%
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {row.learningGain > 0 ? '+' : ''}{row.learningGain.toFixed(1)} pts
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className={`font-medium ${
-                    row.percentageImprovement > 0
-                      ? 'text-green-700'
-                      : row.percentageImprovement < 0
-                      ? 'text-red-700'
-                      : 'text-gray-600'
-                  }`}>
-                    {row.percentageImprovement > 0 ? '+' : ''}{row.percentageImprovement.toFixed(1)}%
-                  </span>
+                  {(() => {
+                    const progression = getMasteryProgression(row.preRate, row.postRate);
+                    const postMastery = getMasteryLevel(row.postRate);
+                    return (
+                      <div>
+                        <div className={`text-sm font-semibold ${
+                          progression.type === 'improved' ? 'text-green-700' :
+                          progression.type === 'declined' ? 'text-red-700' :
+                          'text-gray-600'
+                        }`}>
+                          {progression.message}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {postMastery.icon} {postMastery.level}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {row.postPassed ? (
                       <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                        Passed
+                        ✓ Passed
                       </span>
                     ) : (
                       <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">

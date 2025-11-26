@@ -46,29 +46,59 @@ export function PrePostComparison({ stats }) {
 }
 
 export function LearningGainHistogram({ analysisData }) {
-  const learningGains = analysisData.map(d => d.learningGain);
-  const distribution = getLearningGainDistribution(learningGains);
+  // Use percentage changes instead of raw points for more meaningful visualization
+  const percentageGains = analysisData.map(d => d.postRate - d.preRate);
 
-  const data = distribution.map(bin => ({
-    range: bin.range,
-    count: bin.count,
-    fill: bin.min < 0 ? '#EF4444' : bin.min === 0 ? '#F59E0B' : '#10B981',
-  }));
+  // Create percentage-based bins
+  const bins = [
+    { range: 'Lost 20%+', count: 0, min: -Infinity, max: -20, fill: '#DC2626' },
+    { range: 'Lost 10-20%', count: 0, min: -20, max: -10, fill: '#EF4444' },
+    { range: 'Lost 0-10%', count: 0, min: -10, max: 0, fill: '#F87171' },
+    { range: 'No Change', count: 0, min: 0, max: 0.5, fill: '#F59E0B' },
+    { range: 'Gained 0-10%', count: 0, min: 0.5, max: 10, fill: '#86EFAC' },
+    { range: 'Gained 10-20%', count: 0, min: 10, max: 20, fill: '#22C55E' },
+    { range: 'Gained 20%+', count: 0, min: 20, max: Infinity, fill: '#15803D' },
+  ];
+
+  percentageGains.forEach(gain => {
+    const bin = bins.find(b => gain >= b.min && gain < b.max);
+    if (bin) bin.count++;
+  });
 
   return (
     <div className="card">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Learning Gain Distribution</h3>
+      <h3 className="text-xl font-bold text-gray-800 mb-4">Score Improvement Distribution</h3>
       <p className="text-sm text-gray-600 mb-4">
-        Number of participants by score change from pre to post assessment
+        How much did each person's score improve? (Percentage points gained or lost)
       </p>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+        <BarChart data={bins}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="range" />
-          <YAxis />
-          <Tooltip />
+          <XAxis
+            dataKey="range"
+            angle={-15}
+            textAnchor="end"
+            height={80}
+            tick={{ fontSize: 12 }}
+          />
+          <YAxis label={{ value: 'Number of People', angle: -90, position: 'insideLeft' }} />
+          <Tooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                    <p className="font-semibold text-gray-800">{payload[0].payload.range}</p>
+                    <p className="text-sm text-gray-600">
+                      {payload[0].value} participant{payload[0].value !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
           <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-            {data.map((entry, index) => (
+            {bins.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.fill} />
             ))}
           </Bar>
@@ -77,15 +107,15 @@ export function LearningGainHistogram({ analysisData }) {
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-red-500 rounded"></div>
-          <span className="text-gray-600">Decline</span>
+          <span className="text-gray-600">Score Declined</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-          <span className="text-gray-600">No Change</span>
+          <span className="text-gray-600">Stayed Same</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-green-500 rounded"></div>
-          <span className="text-gray-600">Improvement</span>
+          <span className="text-gray-600">Score Improved</span>
         </div>
       </div>
     </div>

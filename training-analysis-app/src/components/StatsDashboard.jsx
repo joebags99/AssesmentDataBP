@@ -49,6 +49,12 @@ export default function StatsDashboard({ stats, analysisData }) {
   const improvementRate = (stats.improvementDistribution.improved / stats.totalParticipants) * 100;
   const declineRate = (stats.improvementDistribution.declined / stats.totalParticipants) * 100;
 
+  // Calculate percentage point gain (more meaningful than raw points for small quizzes)
+  const percentagePointGain = stats.averagePostScore - stats.averagePreScore;
+  const relativeImprovement = stats.averagePreScore > 0
+    ? ((percentagePointGain / stats.averagePreScore) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
       <div className="card">
@@ -66,65 +72,79 @@ export default function StatsDashboard({ stats, analysisData }) {
 
           <StatCard
             icon={TrendingUp}
-            label="Average Learning Gain"
-            value={`${stats.averageLearningGain.toFixed(1)} pts`}
-            subValue={`${improvementRate.toFixed(0)}% improved`}
+            label="Average Score Improvement"
+            value={`+${percentagePointGain.toFixed(0)}%`}
+            subValue={`${improvementRate.toFixed(0)}% of staff improved`}
             color="green"
-            tooltip="Average score increase from pre to post assessment across all participants"
+            tooltip="Average percentage point increase from pre to post assessment. This shows how much knowledge improved on average."
           />
 
           <StatCard
             icon={Target}
             label="Post-Assessment Pass Rate"
             value={`${stats.postPassRate.toFixed(0)}%`}
-            subValue={`Pre: ${stats.prePassRate.toFixed(0)}%`}
+            subValue={`Up from ${stats.prePassRate.toFixed(0)}%`}
             color="purple"
-            tooltip="Percentage of participants who passed the post-assessment vs pre-assessment"
+            tooltip="Percentage of participants who passed the post-assessment compared to pre-assessment"
           />
 
           <StatCard
             icon={Award}
-            label="Median Post Score"
-            value={`${stats.medianPostScore.toFixed(0)}%`}
-            subValue={`Pre: ${stats.medianPreScore.toFixed(0)}%`}
+            label="Average Post Score"
+            value={`${stats.averagePostScore.toFixed(0)}%`}
+            subValue={`Started at ${stats.averagePreScore.toFixed(0)}%`}
             color="orange"
-            tooltip="Middle value of all post-assessment scores (less affected by outliers than average)"
+            tooltip="Average post-assessment score showing overall mastery level achieved"
           />
         </div>
       </div>
 
-      <div className="card">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Score Comparison</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Pre-Assessment Average</span>
-              <span className="text-lg font-bold text-gray-900">
-                {stats.averagePreScore.toFixed(1)}%
-              </span>
+      <div className="card bg-gradient-to-br from-blue-50 to-green-50 border-2 border-green-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Knowledge Growth</h3>
+
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex-1">
+            <div className="text-sm text-gray-600 mb-1">Before Training</div>
+            <div className="text-4xl font-bold text-blue-700">
+              {stats.averagePreScore.toFixed(0)}%
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-blue-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${stats.averagePreScore}%` }}
-              ></div>
+            <div className="text-xs text-gray-500 mt-1">Average mastery</div>
+          </div>
+
+          <div className="px-8 py-4 bg-white rounded-lg shadow-md border-2 border-green-500">
+            <div className="text-sm text-gray-600 mb-1 text-center">Growth</div>
+            <div className="text-3xl font-bold text-green-600 text-center">
+              +{percentagePointGain.toFixed(0)}%
+            </div>
+            <div className="text-xs text-green-600 mt-1 text-center font-medium">
+              {relativeImprovement > 0 ? `${relativeImprovement.toFixed(0)}% increase` : 'improvement'}
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Post-Assessment Average</span>
-              <span className="text-lg font-bold text-gray-900">
-                {stats.averagePostScore.toFixed(1)}%
-              </span>
+          <div className="flex-1 text-right">
+            <div className="text-sm text-gray-600 mb-1">After Training</div>
+            <div className="text-4xl font-bold text-green-700">
+              {stats.averagePostScore.toFixed(0)}%
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${stats.averagePostScore}%` }}
-              ></div>
-            </div>
+            <div className="text-xs text-gray-500 mt-1">Average mastery</div>
           </div>
+        </div>
+
+        <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-1000"
+            style={{ width: `${stats.averagePreScore}%` }}
+          ></div>
+          <div
+            className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-1000 delay-300"
+            style={{ width: `${stats.averagePostScore}%` }}
+          ></div>
+        </div>
+
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
         </div>
       </div>
 
