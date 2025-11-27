@@ -263,14 +263,33 @@ export default function ResultsTable({ analysisData, courseName }) {
                   })()}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {row.postPassed ? (
+                  <div className="flex flex-col gap-1">
+                    {/* Show progression if status changed */}
+                    {!row.prePassed && row.postPassed ? (
+                      <>
+                        <span className="px-2 py-1 text-xs font-bold bg-gradient-to-r from-yellow-100 to-green-100 text-green-800 rounded border border-green-300">
+                          🎉 Now Passing!
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          (was below threshold)
+                        </span>
+                      </>
+                    ) : row.prePassed && !row.postPassed ? (
+                      <>
+                        <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
+                          ⚠ No Longer Passing
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          (was passing before)
+                        </span>
+                      </>
+                    ) : row.postPassed ? (
                       <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                        ✓ Passed
+                        ✓ Passing
                       </span>
                     ) : (
-                      <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
-                        Not Passed
+                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+                        Below Threshold
                       </span>
                     )}
                   </div>

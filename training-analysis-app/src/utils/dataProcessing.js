@@ -113,6 +113,14 @@ export function matchAssessments(preAssessments, postAssessments) {
 
     if (postIndex !== -1) {
       const post = unmatchedPost.splice(postIndex, 1)[0];
+
+      // Get passing threshold (use either pre or post, they should be the same)
+      const passingThreshold = parseFloat(pre['Current Passing Score']) || parseFloat(post['Current Passing Score']) || 80;
+
+      // Calculate actual scores
+      const preRate = parseFloat(pre['Rate (%)']) || 0;
+      const postRate = parseFloat(post['Rate (%)']) || 0;
+
       matches.push({
         email: pre.Email,
         legalFirstname: pre['Legal Firstname'] || '',
@@ -121,13 +129,14 @@ export function matchAssessments(preAssessments, postAssessments) {
         preScore: parseFloat(pre.Score) || 0,
         postScore: parseFloat(post.Score) || 0,
         fullScore: parseFloat(pre['Full Score']) || 100,
-        preRate: parseFloat(pre['Rate (%)']) || 0,
-        postRate: parseFloat(post['Rate (%)']) || 0,
-        prePassed: pre.Passed === 'Yes',
-        postPassed: post.Passed === 'Yes',
+        preRate: preRate,
+        postRate: postRate,
+        prePassed: preRate >= passingThreshold,
+        postPassed: postRate >= passingThreshold,
         preDate: pre['Start Date'],
         postDate: post['Start Date'],
         examTitle: pre['Exam Title'],
+        passingThreshold: passingThreshold,
       });
     } else {
       unmatchedPre.push(pre);
