@@ -112,12 +112,12 @@ export default function StatsDashboard({ stats, analysisData }) {
           </div>
 
           <div className="px-8 py-4 bg-white rounded-lg shadow-md border-2 border-green-500">
-            <div className="text-sm text-gray-600 mb-1 text-center">Growth</div>
+            <div className="text-sm text-gray-600 mb-1 text-center">Score Gain</div>
             <div className="text-3xl font-bold text-green-600 text-center">
               +{percentagePointGain.toFixed(0)}%
             </div>
-            <div className="text-xs text-green-600 mt-1 text-center font-medium">
-              {relativeImprovement > 0 ? `${relativeImprovement.toFixed(0)}% increase` : 'improvement'}
+            <div className="text-xs text-gray-600 mt-1 text-center font-medium">
+              percentage points
             </div>
           </div>
 
