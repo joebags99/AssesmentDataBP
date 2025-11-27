@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Activity, Database, RefreshCw, Filter, TrendingUp } from 'lucide-react';
+import { Activity, Database, RefreshCw, Filter, TrendingUp, CheckCircle } from 'lucide-react';
 import CSVUpload from './components/CSVUpload';
 import CourseSelector from './components/CourseSelector';
 import StatsDashboard from './components/StatsDashboard';
@@ -31,6 +31,7 @@ function App() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [cacheInfo, setCacheInfo] = useState(null);
   const [excludeAlreadyProficient, setExcludeAlreadyProficient] = useState(false);
+  const [showCompletedOnly, setShowCompletedOnly] = useState(false);
 
   // Load cached data on mount
   useEffect(() => {
@@ -78,6 +79,14 @@ function App() {
     const allParticipantsData = analysisData;
     const allParticipantsStats = calculateStatistics(allParticipantsData);
 
+    // Filter to only course completers (passed post-assessment) if requested
+    let incompleteCount = 0;
+    if (showCompletedOnly) {
+      const filtered = analysisData.filter(d => d.postPassed);
+      incompleteCount = analysisData.length - filtered.length;
+      analysisData = filtered;
+    }
+
     // Filter out already proficient if requested
     let excludedCount = 0;
     if (excludeAlreadyProficient) {
@@ -98,8 +107,9 @@ function App() {
       allParticipantsData,
       allParticipantsStats,
       excludedCount,
+      incompleteCount,
     };
-  }, [rawData, selectedCourse, excludeAlreadyProficient]);
+  }, [rawData, selectedCourse, excludeAlreadyProficient, showCompletedOnly]);
 
   const handleDataLoaded = (data) => {
     setRawData(data);
@@ -201,6 +211,74 @@ function App() {
                 <div className="text-gray-600">
                   <span className="font-semibold text-gray-900">{selectedCourse}</span>
                 </div>
+              </div>
+
+              {/* Course Completers Filter */}
+              <div className="card bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">
+                        Course Completers Only
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Show only participants who passed the post-assessment.
+                        This focuses on those who successfully completed the training.
+                      </p>
+                      {processedData.incompleteCount > 0 && (
+                        <div className="flex items-center gap-2 mt-2 text-sm">
+                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded font-medium">
+                            {processedData.incompleteCount} non-passers excluded
+                          </span>
+                          <span className="text-gray-600">
+                            • Analyzing {processedData.analysisData.length} course completers
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowCompletedOnly(!showCompletedOnly)}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      showCompletedOnly ? 'bg-green-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                        showCompletedOnly ? 'translate-x-7' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Comparison Stats */}
+                {showCompletedOnly && processedData.allParticipantsStats && processedData.incompleteCount > 0 && (
+                  <div className="mt-4 pt-4 border-t border-green-200">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">All Participants</div>
+                        <div className="text-2xl font-bold text-gray-400">
+                          +{(processedData.allParticipantsStats.averagePostScore - processedData.allParticipantsStats.averagePreScore).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-gray-500">average gain</div>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <TrendingUp className="w-8 h-8 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Completers</div>
+                        <div className="text-2xl font-bold text-green-700">
+                          +{(processedData.stats.averagePostScore - processedData.stats.averagePreScore).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-green-600 font-medium">average gain</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Filter Toggle */}

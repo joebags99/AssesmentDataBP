@@ -191,6 +191,10 @@ export function calculateStatistics(analysisData) {
   const noChange = analysisData.filter(d => d.learningGain === 0).length;
   const declined = analysisData.filter(d => d.learningGain < 0).length;
 
+  // Mastery achievement (80% or higher)
+  const preMasteryCount = analysisData.filter(d => d.preRate >= 80).length;
+  const postMasteryCount = analysisData.filter(d => d.postRate >= 80).length;
+
   return {
     totalParticipants: analysisData.length,
     averagePreScore: avgPre,
@@ -200,6 +204,8 @@ export function calculateStatistics(analysisData) {
     averageLearningGain: avgLearningGain,
     prePassRate: (prePassCount / analysisData.length) * 100,
     postPassRate: (postPassCount / analysisData.length) * 100,
+    preMasteryCount: preMasteryCount,
+    postMasteryCount: postMasteryCount,
     improvementDistribution: {
       improved,
       noChange,
@@ -331,12 +337,13 @@ export function getLearningGainDistribution(learningGains) {
 
 /**
  * Get mastery level based on percentage score
+ * Mastery threshold is 80% (typically 4/5 or 5/5 on a 5-question quiz)
  */
 export function getMasteryLevel(percentage) {
-  if (percentage >= 90) return { level: 'Advanced', color: 'purple', icon: '🌟' };
-  if (percentage >= 80) return { level: 'Proficient', color: 'green', icon: '✓' };
-  if (percentage >= 70) return { level: 'Developing', color: 'blue', icon: '↗' };
-  if (percentage >= 60) return { level: 'Emerging', color: 'yellow', icon: '→' };
+  if (percentage >= 80) return { level: 'Mastery', color: 'purple', icon: '🌟' };
+  if (percentage >= 70) return { level: 'Proficient', color: 'green', icon: '✓' };
+  if (percentage >= 60) return { level: 'Developing', color: 'blue', icon: '↗' };
+  if (percentage >= 50) return { level: 'Emerging', color: 'yellow', icon: '→' };
   return { level: 'Needs Support', color: 'red', icon: '!' };
 }
 
@@ -351,7 +358,7 @@ export function getMasteryProgression(preRate, postRate) {
     return { type: 'maintained', message: `Maintained ${post.level}` };
   }
 
-  const levels = ['Needs Support', 'Emerging', 'Developing', 'Proficient', 'Advanced'];
+  const levels = ['Needs Support', 'Emerging', 'Developing', 'Proficient', 'Mastery'];
   const preIndex = levels.indexOf(pre.level);
   const postIndex = levels.indexOf(post.level);
 

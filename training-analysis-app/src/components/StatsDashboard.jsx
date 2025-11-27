@@ -148,6 +148,63 @@ export default function StatsDashboard({ stats, analysisData }) {
         </div>
       </div>
 
+      <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Mastery Achievement (80%+)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Number of participants who achieved mastery level (80% or higher, typically 4/5 or 5/5 on quizzes)
+        </p>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <div className="text-sm text-gray-600 mb-2">Before Training</div>
+            <div className="relative h-32 bg-gray-200 rounded-lg flex items-end overflow-hidden">
+              <div
+                className="w-full bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-1000 flex items-center justify-center"
+                style={{ height: `${Math.max((stats.preMasteryCount / stats.totalParticipants) * 100, 5)}%` }}
+              >
+                <span className="text-white font-bold text-lg">
+                  {stats.preMasteryCount}
+                </span>
+              </div>
+            </div>
+            <div className="text-center mt-2">
+              <div className="text-2xl font-bold text-blue-700">{stats.preMasteryCount}</div>
+              <div className="text-xs text-gray-600">
+                {((stats.preMasteryCount / stats.totalParticipants) * 100).toFixed(0)}% at mastery
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-sm text-gray-600 mb-2">After Training</div>
+            <div className="relative h-32 bg-gray-200 rounded-lg flex items-end overflow-hidden">
+              <div
+                className="w-full bg-gradient-to-t from-purple-600 to-purple-400 transition-all duration-1000 delay-300 flex items-center justify-center"
+                style={{ height: `${Math.max((stats.postMasteryCount / stats.totalParticipants) * 100, 5)}%` }}
+              >
+                <span className="text-white font-bold text-lg">
+                  {stats.postMasteryCount}
+                </span>
+              </div>
+            </div>
+            <div className="text-center mt-2">
+              <div className="text-2xl font-bold text-purple-700">{stats.postMasteryCount}</div>
+              <div className="text-xs text-gray-600">
+                {((stats.postMasteryCount / stats.totalParticipants) * 100).toFixed(0)}% at mastery
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {stats.postMasteryCount > stats.preMasteryCount && (
+          <div className="mt-4 p-3 bg-purple-100 border border-purple-300 rounded-lg text-center">
+            <div className="text-sm font-medium text-purple-800">
+              🎉 {stats.postMasteryCount - stats.preMasteryCount} more participant{stats.postMasteryCount - stats.preMasteryCount !== 1 ? 's' : ''} achieved mastery!
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="card">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Learning Gain Distribution</h3>
         <div className="grid grid-cols-3 gap-4">
