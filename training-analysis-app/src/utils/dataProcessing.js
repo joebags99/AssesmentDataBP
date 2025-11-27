@@ -174,15 +174,16 @@ export function calculateStatistics(analysisData) {
     return null;
   }
 
-  const preScores = analysisData.map(d => d.preScore);
-  const postScores = analysisData.map(d => d.postScore);
-  const learningGains = analysisData.map(d => d.learningGain);
+  // Use RATES (percentages) instead of raw scores for meaningful statistics
+  const preRates = analysisData.map(d => d.preRate);
+  const postRates = analysisData.map(d => d.postRate);
+  const rateGains = analysisData.map(d => d.postRate - d.preRate);
 
-  const avgPre = average(preScores);
-  const avgPost = average(postScores);
-  const medianPre = median(preScores);
-  const medianPost = median(postScores);
-  const avgLearningGain = average(learningGains);
+  const avgPre = average(preRates);
+  const avgPost = average(postRates);
+  const medianPre = median(preRates);
+  const medianPost = median(postRates);
+  const avgLearningGain = average(rateGains);
 
   const prePassCount = analysisData.filter(d => d.prePassed).length;
   const postPassCount = analysisData.filter(d => d.postPassed).length;
