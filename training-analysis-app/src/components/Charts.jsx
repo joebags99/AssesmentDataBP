@@ -159,7 +159,7 @@ export function ScoreDistributionChart({ analysisData, type = 'pre' }) {
 export function BaselineVsGainScatter({ analysisData }) {
   const data = analysisData.map(d => ({
     preScore: d.preRate,
-    learningGain: d.learningGain,
+    learningGain: d.postRate - d.preRate, // Use percentage point difference instead of raw score
     name: `${d.displayName} ${d.lastname}`,
   }));
 
@@ -186,7 +186,7 @@ export function BaselineVsGainScatter({ analysisData }) {
             type="number"
             dataKey="learningGain"
             name="Learning Gain"
-            label={{ value: 'Learning Gain (points)', angle: -90, position: 'insideLeft' }}
+            label={{ value: 'Learning Gain (percentage points)', angle: -90, position: 'insideLeft' }}
           />
           <Tooltip
             cursor={{ strokeDasharray: '3 3' }}
@@ -197,10 +197,10 @@ export function BaselineVsGainScatter({ analysisData }) {
                   <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                     <p className="font-semibold text-gray-800">{data.name}</p>
                     <p className="text-sm text-gray-600">
-                      Pre-Test: {data.preScore.toFixed(1)}%
+                      Pre-Test: {data.preScore.toFixed(0)}%
                     </p>
                     <p className="text-sm text-gray-600">
-                      Learning Gain: {data.learningGain.toFixed(1)} pts
+                      Learning Gain: {data.learningGain > 0 ? '+' : ''}{data.learningGain.toFixed(0)} percentage points
                     </p>
                   </div>
                 );
